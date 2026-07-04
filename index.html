@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Financely - Premium Mobile Finance Manager</title>
+    <!-- Material Icons & Google Fonts -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN untuk Keperluan Statistik Dinamis -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- App Shell Wrapper (Mensimulasikan Frame Android Device) -->
+    <div class="app-container">
+        
+        <!-- GLOBAL APP BAR / HEADER -->
+        <header class="app-header">
+            <div class="header-user">
+                <div class="avatar">U</div>
+                <div class="greeting-box">
+                    <span class="text-xs text-muted">Selamat datang,</span>
+                    <h4 class="text-sm weight-bold" id="user-name-display">User Pemantau</h4>
+                </div>
+            </div>
+            <button class="btn-icon ripple" id="theme-toggle-btn" aria-label="Ubah Tema">
+                <span class="material-icons-round">dark_mode</span>
+            </button>
+        </header>
+
+        <!-- MAIN SCROLLABLE CONTENT LAYER -->
+        <main class="app-content" id="app-main-content">
+            
+            <!-- VIEW 1: DASHBOARD -->
+            <section id="view-dashboard" class="app-view active">
+                <!-- Total Balance Area -->
+                <div class="balance-card">
+                    <span class="text-xs text-white-muted uppercase tracking-wider">Total Saldo Bersih</span>
+                    <h1 class="balance-amount" id="dash-total-balance">Rp 0</h1>
+                    <div class="cashflow-summary">
+                        <div class="cf-item income">
+                            <span class="material-icons-round">arrow_downward</span>
+                            <div>
+                                <p class="text-xs text-white-muted">Pemasukan</p>
+                                <p class="text-sm weight-bold" id="dash-total-income">Rp 0</p>
+                            </div>
+                        </div>
+                        <div class="cf-item expense">
+                            <span class="material-icons-round">arrow_upward</span>
+                            <div>
+                                <p class="text-xs text-white-muted">Pengeluaran</p>
+                                <p class="text-sm weight-bold" id="dash-total-expense">Rp 0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Action Hub -->
+                <div class="section-title-box">
+                    <h3 class="text-sm weight-bold">Aksi Cepat</h3>
+                </div>
+                <div class="quick-actions-grid">
+                    <button class="qa-card ripple" onclick="app.openQuickAdd('income')">
+                        <div class="qa-icon inc"><span class="material-icons-round">add_circle</span></div>
+                        <span class="text-xs weight-medium">+ Pemasukan</span>
+                    </button>
+                    <button class="qa-card ripple" onclick="app.openQuickAdd('expense')">
+                        <div class="qa-icon exp"><span class="material-icons-round">remove_circle</span></div>
+                        <span class="text-xs weight-medium">- Pengeluaran</span>
+                    </button>
+                    <button class="qa-card ripple" onclick="app.switchView('wallets')">
+                        <div class="qa-icon wal"><span class="material-icons-round">account_balance_wallet</span></div>
+                        <span class="text-xs weight-medium">Kelola Dompet</span>
+                    </button>
+                    <button class="qa-card ripple" onclick="app.switchView('budgets')">
+                        <div class="qa-icon bud"><span class="material-icons-round">pie_chart_outline</span></div>
+                        <span class="text-xs weight-medium">Atur Budget</span>
+                    </button>
+                </div>
+
+                <!-- Wallets Segment -->
+                <div class="section-title-box">
+                    <h3 class="text-sm weight-bold">Dompet & Rekening</h3>
+                    <button class="text-xs weight-bold btn-text" onclick="app.switchView('wallets')">Lihat Semua</button>
+                </div>
+                <div class="horizontal-scroll-container" id="dash-wallets-list">
+                    <!-- Dinamis via JS -->
+                </div>
+
+                <!-- Budget Alert Tracker -->
+                <div class="section-title-box">
+                    <h3 class="text-sm weight-bold">Pantauan Budget</h3>
+                </div>
+                <div class="vertical-stack" id="dash-budget-stack">
+                    <!-- Dinamis via JS -->
+                </div>
+
+                <!-- Recent Transactions Feed -->
+                <div class="section-title-box">
+                    <h3 class="text-sm weight-bold">Transaksi Terakhir</h3>
+                    <button class="text-xs weight-bold btn-text" onclick="app.switchView('transactions')">Semua</button>
+                </div>
+                <div class="vertical-stack" id="dash-recent-transactions">
+                    <!-- Dinamis via JS -->
+                </div>
+            </section>
+
+            <!-- VIEW 2: TRANSACTIONS (LIST & FILTERS) -->
+            <section id="view-transactions" class="app-view">
+                <div class="sticky-filter-bar">
+                    <!-- Search Input -->
+                    <div class="search-input-box">
+                        <span class="material-icons-round search-icon">search</span>
+                        <input type="text" id="tx-search-input" placeholder="Cari deskripsi transaksi..." autocomplete="off">
+                    </div>
+                    <!-- Quick Filters Stack -->
+                    <div class="filter-chips-row">
+                        <select id="filter-type-select" class="filter-chip-select">
+                            <option value="all">Semua Tipe</option>
+                            <option value="income">Pemasukan</option>
+                            <option value="expense">Pengeluaran</option>
+                        </select>
+                        <select id="filter-category-select" class="filter-chip-select">
+                            <option value="all">Semua Kategori</option>
+                        </select>
+                        <select id="sort-order-select" class="filter-chip-select">
+                            <option value="newest">Terbaru</option>
+                            <option value="oldest">Terlama</option>
+                            <option value="highest">Nominal Terbesar</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="vertical-stack tx-history-margin" id="tx-full-history-list">
+                    <!-- Dinamis via JS -->
+                </div>
+            </section>
+
+            <!-- VIEW 3: STATISTICS -->
+            <section id="view-stats" class="app-view">
+                <div class="section-title-box">
+                    <h3 class="text-sm weight-bold">Analisis Aliran Kas</h3>
+                </div>
+                <div class="chart-card-container">
+                    <canvas id="analyticsLineChart"></canvas>
+                </div>
+
+                <div class="section-title-box">
+                    <h3 class="text-sm weight-bold">Distribusi Pengeluaran</h3>
+                </div>
+                <div class="chart-card-container">
+                    <canvas id="analyticsPieChart"></canvas>
+                </div>
+
+                <div class="section-title-box">
+                    <h3 class="text-sm weight-bold">Kategori Alokasi Terbesar</h3>
+                </div>
+                <div class="vertical-stack" id="stats-category-ranking">
+                    <!-- Dinamis via JS -->
+                </div>
+            </section>
+
+            <!-- VIEW 4: WALLETS MANAGEMENT -->
+            <section id="view-wallets" class="app-view">
+                <div class="section-title-box">
+                    <h3 class="text-sm weight-bold">Daftar Finansial Akun</h3>
+                    <button class="btn-filled-sm ripple" onclick="app.openWalletModal()">+ Tambah</button>
+                </div>
+                <div class="vertical-stack" id="wallets-management-list">
+                    <!-- Dinamis via JS -->
+                </div>
+            </section>
+
+            <!-- VIEW 5: BUDGET & SAVINGS TARGET -->
+            <section id="view-budgets" class="app-view">
+                <div class="section-title-box">
+                    <h3 class="text-sm weight-bold">Anggaran Bulanan</h3>
+                    <button class="btn-filled-sm ripple" onclick="app.openBudgetModal()">+ Atur</button>
+                </div>
+                <div class="vertical-stack shadow-sm" id="budget-management-list">
+                    <!-- Dinamis via JS -->
+                </div>
+
+                <div class="section-title-box margin-top-md">
+                    <h3 class="text-sm weight-bold">Target Tabungan (Goals)</h3>
+                    <button class="btn-filled-sm ripple" onclick="app.openSavingModal()">+ Target</button>
+                </div>
+                <div class="vertical-stack" id="savings-management-list">
+                    <!-- Dinamis via JS -->
+                </div>
+            </section>
+
+            <!-- VIEW 6: SETTINGS, BACKUP & ABOUT -->
+            <section id="view-settings" class="app-view">
+                <div class="profile-header-card">
+                    <div class="large-avatar">MD</div>
+                    <h3 class="text-md weight-bold margin-top-xs">User Finansial Premium</h3>
+                    <p class="text-xs text-muted">Local Storage Mode Actived</p>
+                </div>
+
+                <div class="section-title-box">
+                    <h3 class="text-sm weight-bold">Data & Pencadangan</h3>
+                </div>
+                <div class="settings-list-card">
+                    <div class="settings-item ripple" onclick="app.exportData('json')">
+                        <span class="material-icons-round text-primary">backup</span>
+                        <div class="settings-text">
+                            <p class="text-sm weight-medium">Ekspor Data (JSON)</p>
+                            <p class="text-xs text-muted">Unduh seluruh berkas backup aplikasi</p>
+                        </div>
+                    </div>
+                    <div class="settings-item ripple" onclick="app.exportData('csv')">
+                        <span class="material-icons-round text-success">grid_on</span>
+                        <div class="settings-text">
+                            <p class="text-sm weight-medium">Ekspor ke Excel/CSV</p>
+                            <p class="text-xs text-muted">Laporan komparasi tabel mentah</p>
+                        </div>
+                    </div>
+                    <label class="settings-item ripple" for="import-file-input">
+                        <span class="material-icons-round text-warning">cloud_upload</span>
+                        <div class="settings-text">
+                            <p class="text-sm weight-medium">Pulihkan Data (Import JSON)</p>
+                            <p class="text-xs text-muted">Unggah kembali file backup cadangan Anda</p>
+                        </div>
+                        <input type="file" id="import-file-input" accept=".json" style="display: none;">
+                    </label>
+                    <div class="settings-item ripple" onclick="app.clearAllDataData()">
+                        <span class="material-icons-round text-error">delete_forever</span>
+                        <div class="settings-text">
+                            <p class="text-sm weight-medium text-error">Reset Total Aplikasi</p>
+                            <p class="text-xs text-muted">Menghapus bersih seluruh memori lokal</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-title-box">
+                    <h3 class="text-sm weight-bold">Tentang Aplikasi</h3>
+                </div>
+                <div class="settings-list-card padding-md text-xs text-muted Line-height-lg">
+                    <p class="weight-bold text-dark">Financely Suite v3.2.0 - Premium Build</p>
+                    <p>Dikembangkan dengan prinsip Material Design 3 Mobile-First untuk performa ultra stabil tanpa konsumsi memori berlebih.</p>
+                    <p class="margin-top-xs">© 2026 Senior Frontend Architecture Project.</p>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- FLOATING ACTION BUTTON (FAB) -->
+        <button class="md3-fab ripple" id="global-fab" aria-label="Tambah Transaksi">
+            <span class="material-icons-round">add</span>
+        </button>
+
+        <!-- NATIVE-LIKE BOTTOM NAVIGATION BAR -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-view="dashboard">
+                <span class="material-icons-round">space_dashboard</span>
+                <span class="nav-label">Utama</span>
+            </button>
+            <button class="nav-item" data-view="transactions">
+                <span class="material-icons-round">receipt_long</span>
+                <span class="nav-label">Transaksi</span>
+            </button>
+            <div class="nav-item-placeholder"></div> <!-- Ruang Kosong agar FAB Tidak Menumpuk Menu -->
+            <button class="nav-item" data-view="stats">
+                <span class="material-icons-round">analytics</span>
+                <span class="nav-label">Analisis</span>
+            </button>
+            <button class="nav-item" data-view="settings">
+                <span class="material-icons-round">manage_accounts</span>
+                <span class="nav-label">Profil</span>
+            </button>
+        </nav>
+
+        <!-- TOAST NOTIFICATION CONTAINER -->
+        <div id="toast-container" class="toast-wrapper"></div>
+
+        <!-- DIALOG MODAL SYSTEM: TRANSAKSI (ADD / EDIT) -->
+        <div class="modal-overlay" id="modal-transaction">
+            <div class="modal-sheet">
+                <div class="modal-header">
+                    <h3 class="text-md weight-bold" id="tx-modal-title">Catat Transaksi</h3>
+                    <button class="btn-icon ripple" onclick="app.closeModal('modal-transaction')">
+                        <span class="material-icons-round">close</span>
+                    </button>
+                </div>
+                <form id="transaction-form" onsubmit="app.handleTransactionSubmit(event)">
+                    <input type="hidden" id="tx-edit-id">
+                    
+                    <div class="segmented-control">
+                        <input type="radio" id="type-expense" name="tx-type" value="expense" checked>
+                        <label for="type-expense" class="ripple">Pengeluaran</label>
+                        <input type="radio" id="type-income" name="tx-type" value="income">
+                        <label for="type-income" class="ripple">Pemasukan</label>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label">Nominal (Rupiah) *</label>
+                        <input type="number" id="tx-amount" class="md-input" placeholder="Contoh: 50000" required min="1">
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label">Kategori *</label>
+                        <select id="tx-category" class="md-input" required>
+                            <!-- Diisi dinamis -->
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label">Sumber Dana / Dompet *</label>
+                        <select id="tx-wallet" class="md-input" required>
+                            <!-- Diisi dinamis -->
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label">Tanggal Transaksi *</label>
+                        <input type="date" id="tx-date" class="md-input" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label">Keterangan / Catatan</label>
+                        <input type="text" id="tx-description" class="md-input" placeholder="Makan siang, Ongkos, dll">
+                    </div>
+
+                    <div class="modal-actions-row">
+                        <button type="button" class="btn-text-md ripple" onclick="app.closeModal('modal-transaction')">Batal</button>
+                        <button type="submit" class="btn-filled-md ripple">Simpan Catatan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- DIALOG MODAL SYSTEM: DOMPET (ADD) -->
+        <div class="modal-overlay" id="modal-wallet">
+            <div class="modal-sheet">
+                <div class="modal-header">
+                    <h3 class="text-md weight-bold">Tambah Akun Finansial</h3>
+                    <button class="btn-icon ripple" onclick="app.closeModal('modal-wallet')">
+                        <span class="material-icons-round">close</span>
+                    </button>
+                </div>
+                <form id="wallet-form" onsubmit="app.handleWalletSubmit(event)">
+                    <div class="input-group">
+                        <label class="input-label">Nama Dompet / Bank *</label>
+                        <input type="text" id="wal-name" class="md-input" placeholder="BCA Pribadi, Kantong Tunai, Gopay" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Tipe Akun *</label>
+                        <select id="wal-type" class="md-input" required>
+                            <option value="bank">Bank Terpusat</option>
+                            <option value="cash">Uang Tunai (Cash)</option>
+                            <option value="wallet">E-Wallet / Dompet Digital</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Saldo Awal (Rupiah) *</label>
+                        <input type="number" id="wal-balance" class="md-input" value="0" required min="0">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Aksen Tema Warna Visual *</label>
+                        <select id="wal-color" class="md-input" required>
+                            <option value="#6750A4">Material Purple</option>
+                            <option value="#006874">Ocean Teal</option>
+                            <option value="#386A20">Forest Green</option>
+                            <option value="#A63E2B">Deep Terracotta</option>
+                        </select>
+                    </div>
+                    <div class="modal-actions-row">
+                        <button type="button" class="btn-text-md ripple" onclick="app.closeModal('modal-wallet')">Batal</button>
+                        <button type="submit" class="btn-filled-md ripple">Buat Dompet</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- DIALOG MODAL SYSTEM: BUDGET (SET) -->
+        <div class="modal-overlay" id="modal-budget">
+            <div class="modal-sheet">
+                <div class="modal-header">
+                    <h3 class="text-md weight-bold">Atur Batas Anggaran Kategori</h3>
+                    <button class="btn-icon ripple" onclick="app.closeModal('modal-budget')">
+                        <span class="material-icons-round">close</span>
+                    </button>
+                </div>
+                <form id="budget-form" onsubmit="app.handleBudgetSubmit(event)">
+                    <div class="input-group">
+                        <label class="input-label">Pilih Kategori *</label>
+                        <select id="bud-category" class="md-input" required></select>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Batas Anggaran Bulanan (Rupiah) *</label>
+                        <input type="number" id="bud-limit" class="md-input" placeholder="Maksimal pengeluaran" required min="1">
+                    </div>
+                    <div class="modal-actions-row">
+                        <button type="button" class="btn-text-md ripple" onclick="app.closeModal('modal-budget')">Batal</button>
+                        <button type="submit" class="btn-filled-md ripple">Terapkan Batas</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- DIALOG MODAL SYSTEM: SAVINGS GOAL (ADD) -->
+        <div class="modal-overlay" id="modal-saving">
+            <div class="modal-sheet">
+                <div class="modal-header">
+                    <h3 class="text-md weight-bold">Buat Target Tabungan Terpandu</h3>
+                    <button class="btn-icon ripple" onclick="app.closeModal('modal-saving')">
+                        <span class="material-icons-round">close</span>
+                    </button>
+                </div>
+                <form id="saving-form" onsubmit="app.handleSavingSubmit(event)">
+                    <div class="input-group">
+                        <label class="input-label">Nama Impian / Goal Tabungan *</label>
+                        <input type="text" id="sav-name" class="md-input" placeholder="Beli Laptop Kerja, Dana Darurat" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Jumlah Target Akumulasi (Rupiah) *</label>
+                        <input type="number" id="sav-target" class="md-input" required min="1">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Jumlah yang Sudah Terkumpul Saat Ini *</label>
+                        <input type="number" id="sav-current" class="md-input" value="0" required min="0">
+                    </div>
+                    <div class="modal-actions-row">
+                        <button type="button" class="btn-text-md ripple" onclick="app.closeModal('modal-saving')">Batal</button>
+                        <button type="submit" class="btn-filled-md ripple">Buat Target</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Sistem Injeksi Ripple Effect secara Global -->
+    <script>
+        document.addEventListener('click', function (e) {
+            const target = e.target.closest('.ripple');
+            if (!target) return;
+            
+            const circle = document.createElement('span');
+            const diameter = Math.max(target.clientWidth, target.clientHeight);
+            const radius = diameter / 2;
+            
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${e.clientX - target.getBoundingClientRect().left - radius}px`;
+            circle.style.top = `${e.clientY - target.getBoundingClientRect().top - radius}px`;
+            circle.classList.add('ripple-wave');
+            
+            const prevWave = target.getElementsByClassName('ripple-wave')[0];
+            if (prevWave) prevWave.remove();
+            
+            target.appendChild(circle);
+        });
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>
